@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de capital</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#111827',
+                            900: '#0f172a',
+                            950: '#020617'
+                        },
+                        emerald: {
+                            400: '#34d399',
+                            500: '#10b981',
+                            600: '#059669'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #020617; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen pb-24 selection:bg-emerald-500 selection:text-slate-950">
+
+    <!-- Header Principal -->
+    <header class="sticky top-0 z-30 bg-slate-900/80 backdrop-blur-md border-b border-slate-800/80 px-4 py-3.5">
+        <div class="max-w-2xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-slate-950 font-bold text-lg shadow-lg shadow-emerald-500/20">
+                    <i class="fa-solid fa-chart-pie"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-base text-slate-100 leading-tight">Control de capital</h1>
+                    <p class="text-[11px] text-slate-400">Deudas, abonos e inversiones</p>
+                </div>
+            </div>
+            <button onclick="openRecordModal()" class="bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-semibold px-3.5 py-2 rounded-xl text-xs flex items-center space-x-2 transition-all shadow-lg shadow-emerald-500/15">
+                <i class="fa-solid fa-plus text-xs"></i>
+                <span>Nuevo Registro</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="max-w-2xl mx-auto px-4 mt-5 space-y-5">
+
+        <!-- Tarjetas de Resumen de Capital -->
+        <section class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <!-- 1. Inversión Total -->
+            <div class="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-3.5 relative overflow-hidden flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[11px] font-medium text-slate-400">Inversión Total</span>
+                    <i class="fa-solid fa-boxes-stacked text-xs text-slate-500"></i>
+                </div>
+                <div>
+                    <h2 id="sum-investment" class="text-lg font-bold text-slate-100">$0.00</h2>
+                    <span class="text-[10px] text-slate-500 mt-0.5 block leading-tight">Costo acumulado</span>
+                </div>
+            </div>
+
+            <!-- 2. Faltante por Cobrar -->
+            <div class="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-3.5 relative overflow-hidden flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[11px] font-medium text-slate-400">Por Cobrar</span>
+                    <i class="fa-solid fa-clock text-xs text-amber-500/80"></i>
+                </div>
+                <div>
+                    <h2 id="sum-receivable" class="text-lg font-bold text-amber-400">$0.00</h2>
+                    <span class="text-[10px] text-slate-500 mt-0.5 block leading-tight">Resta con abonos</span>
+                </div>
+            </div>
+
+            <!-- 3. Ganancias Cobradas -->
+            <div class="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-3.5 relative overflow-hidden flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[11px] font-medium text-slate-400">Ganancia Realizada</span>
+                    <i class="fa-solid fa-circle-check text-xs text-emerald-500/80"></i>
+                </div>
+                <div>
+                    <h2 id="sum-real-profit" class="text-lg font-bold text-emerald-400">$0.00</h2>
+                    <span class="text-[10px] text-emerald-500/70 mt-0.5 block leading-tight">Cobrada acumulada</span>
+                </div>
+            </div>
+
+            <!-- 4. Ganancias Totales / Proyectadas -->
+            <div class="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-3.5 relative overflow-hidden flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[11px] font-medium text-slate-400">Ganancia Total</span>
+                    <i class="fa-solid fa-chart-line text-xs text-indigo-400/80"></i>
+                </div>
+                <div>
+                    <h2 id="sum-projected-profit" class="text-lg font-bold text-indigo-400">$0.00</h2>
+                    <span class="text-[10px] text-slate-500 mt-0.5 block leading-tight">Cobrado + Pendiente</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Buscador y Filtros -->
+        <section class="flex flex-col sm:flex-row gap-2.5 items-center justify-between">
+            <div class="relative w-full">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                    <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                </span>
+                <input type="text" id="search-input" oninput="filterRecords()" placeholder="Buscar cliente o motivo..." 
+                    class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-4 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors">
+            </div>
+            <div class="flex items-center space-x-1.5 w-full sm:w-auto shrink-0">
+                <button onclick="setFilter('all')" id="filter-btn-all" class="flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-medium bg-emerald-500 text-slate-950 transition-all">Todos</button>
+                <button onclick="setFilter('pending')" id="filter-btn-pending" class="flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-medium bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 transition-all">Pendientes</button>
+                <button onclick="setFilter('paid')" id="filter-btn-paid" class="flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-medium bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 transition-all">Pagados</button>
+            </div>
+        </section>
+
+        <!-- Lista de Registros -->
+        <section>
+            <div class="flex items-center justify-between mb-3 px-1">
+                <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Registros de Cobro</h3>
+                <span id="record-count" class="text-xs text-slate-500">0 registros</span>
+            </div>
+
+            <div id="records-container" class="space-y-3">
+                <!-- Contenido renderizado por JS -->
+            </div>
+
+            <!-- Estado Vacío -->
+            <div id="empty-state" class="hidden text-center py-12 px-4 bg-slate-900/40 border border-slate-800/60 rounded-2xl mt-2">
+                <div class="w-12 h-12 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-3 text-slate-500 text-lg">
+                    <i class="fa-solid fa-receipt"></i>
+                </div>
+                <h4 class="text-sm font-semibold text-slate-300">Sin registros por mostrar</h4>
+                <p class="text-xs text-slate-500 mt-1 max-w-xs mx-auto">Agrega una nueva deuda para comenzar a organizar tu capital e inversiones.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal para Agregar / Editar Registro -->
+    <div id="record-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+            <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+                <h3 id="modal-title" class="font-semibold text-sm text-slate-200">Nuevo Registro - Control de capital</h3>
+                <button onclick="closeRecordModal()" class="w-7 h-7 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-colors">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            </div>
+
+            <form id="record-form" onsubmit="handleRecordSubmit(event)" class="p-5 space-y-4">
+                <input type="hidden" id="record-id">
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Nombre de la Persona (Deudor/Cliente)</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                            <i class="fa-solid fa-user text-xs"></i>
+                        </span>
+                        <input type="text" id="client-name" required placeholder="Nombre completo o referencia"
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Motivo de la deuda / Producto</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                            <i class="fa-solid fa-tag text-xs"></i>
+                        </span>
+                        <input type="text" id="item-reason" required placeholder="( Especificar motivo deuda )"
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Inversión / Costo ($)</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 text-xs">$</span>
+                            <input type="number" step="0.01" min="0.10" id="purchase-cost" required placeholder="(Monto mínimo 0.10$)" oninput="calculatePreviewProfit()"
+                                class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-7 pr-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Monto Deuda Total ($)</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 text-xs">$</span>
+                            <input type="number" step="0.01" min="0.10" id="selling-price" required placeholder="(Monto mínimo 0.10$)" oninput="calculatePreviewProfit()"
+                                class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-7 pr-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cálculo automático de Ganancia -->
+                <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3 flex items-center justify-between">
+                    <span class="text-xs text-slate-400">Ganancia calculada:</span>
+                    <span id="preview-profit" class="text-xs font-bold text-emerald-400">$0.00</span>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Fecha Límite de Pago</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                            <i class="fa-solid fa-calendar text-xs"></i>
+                        </span>
+                        <input type="date" id="due-date" required
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Notas adicionales (Opcional)</label>
+                    <textarea id="optional-notes" rows="2" placeholder="Detalles o compromisos de pago..."
+                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500 resize-none"></textarea>
+                </div>
+
+                <div class="pt-2 flex items-center space-x-2.5">
+                    <button type="button" onclick="closeRecordModal()" class="w-1/2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-2.5 rounded-xl text-xs transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="w-1/2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold py-2.5 rounded-xl text-xs transition-colors shadow-lg shadow-emerald-500/10">
+                        Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Registrar Abono -->
+    <div id="payment-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl">
+            <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+                <div>
+                    <h3 class="font-semibold text-sm text-slate-200">Registrar Abono</h3>
+                    <p id="payment-client-sub" class="text-[11px] text-slate-400 mt-0.5">Cliente</p>
+                </div>
+                <button onclick="closePaymentModal()" class="w-7 h-7 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-colors">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            </div>
+
+            <form id="payment-form" onsubmit="handlePaymentSubmit(event)" class="p-5 space-y-4">
+                <input type="hidden" id="payment-record-id">
+
+                <!-- Resumen Estado de Cuenta -->
+                <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 grid grid-cols-2 gap-2 text-center">
+                    <div>
+                        <span class="text-[10px] text-slate-500 block">Monto Total</span>
+                        <span id="payment-total-amount" class="text-xs font-bold text-slate-200">$0.00</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-500 block">Restante Pendiente</span>
+                        <span id="payment-remaining-amount" class="text-xs font-bold text-amber-400">$0.00</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Monto del Abono ($)</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 text-xs">$</span>
+                        <input type="number" step="0.01" min="0.01" id="payment-amount" required placeholder="0.00"
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-7 pr-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Fecha del Abono</label>
+                    <input type="date" id="payment-date" required
+                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Nota o Referencia (Opcional)</label>
+                    <input type="text" id="payment-note" placeholder="Ej. Pago en efectivo, Pago móvil..."
+                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500">
+                </div>
+
+                <div class="pt-2 flex items-center space-x-2.5">
+                    <button type="button" onclick="closePaymentModal()" class="w-1/2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-2.5 rounded-xl text-xs transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="w-1/2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold py-2.5 rounded-xl text-xs transition-colors shadow-lg shadow-emerald-500/10">
+                        Guardar Abono
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Historial de Abonos -->
+    <div id="history-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+            <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+                <div>
+                    <h3 class="font-semibold text-sm text-slate-200">Historial de Abonos</h3>
+                    <p id="history-client-name" class="text-[11px] text-slate-400">Cliente</p>
+                </div>
+                <button onclick="closeHistoryModal()" class="w-7 h-7 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-colors">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            </div>
+
+            <div class="p-5">
+                <div id="history-list-container" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                    <!-- Contenido JS -->
+                </div>
+                
+                <div class="mt-4 pt-3 border-t border-slate-800 flex justify-end">
+                    <button onclick="closeHistoryModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs transition-colors">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast de Notificaciones -->
+    <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-slate-900 border border-slate-800 text-slate-200 px-4 py-3 rounded-2xl shadow-2xl flex items-center space-x-2.5 transition-all duration-300 translate-y-20 opacity-0 pointer-events-none">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+        <span id="toast-message" class="text-xs font-medium">Operación realizada</span>
+    </div>
+
+    <!-- Lógica JavaScript -->
+    <script>
+        let records = JSON.parse(localStorage.getItem('control_capital_records')) || [];
+        let currentFilter = 'all';
+        let currentSearchQuery = '';
+
+        window.onload = function() {
+            renderApp();
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('due-date').value = today;
+            document.getElementById('payment-date').value = today;
+        };
+
+        function saveToLocalStorage() {
+            localStorage.setItem('control_capital_records', JSON.stringify(records));
+        }
+
+        // --- GESTIÓN DE MODAL PRINCIPAL (NUEVO/EDITAR) ---
+        function openRecordModal(id = null) {
+            const modal = document.getElementById('record-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            if (id) {
+                document.getElementById('modal-title').innerText = 'Editar Registro';
+                const rec = records.find(r => r.id === id);
+                if (rec) {
+                    document.getElementById('record-id').value = rec.id;
+                    document.getElementById('client-name').value = rec.clientName;
+                    document.getElementById('item-reason').value = rec.itemReason;
+                    document.getElementById('purchase-cost').value = rec.purchaseCost;
+                    document.getElementById('selling-price').value = rec.sellingPrice;
+                    document.getElementById('due-date').value = rec.dueDate;
+                    document.getElementById('optional-notes').value = rec.notes || '';
+                    calculatePreviewProfit();
+                }
+            } else {
+                document.getElementById('modal-title').innerText = 'Nuevo Registro - Control de capital';
+                document.getElementById('record-form').reset();
+                document.getElementById('record-id').value = '';
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('due-date').value = today;
+                document.getElementById('preview-profit').innerText = '$0.00';
+            }
+        }
+
+        function closeRecordModal() {
+            const modal = document.getElementById('record-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function calculatePreviewProfit() {
+            const cost = parseFloat(document.getElementById('purchase-cost').value) || 0;
+            const price = parseFloat(document.getElementById('selling-price').value) || 0;
+            const profit = price - cost;
+            const profitEl = document.getElementById('preview-profit');
+            profitEl.innerText = `$${profit.toFixed(2)}`;
+            profitEl.className = `text-xs font-bold ${profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+        }
+
+        function handleRecordSubmit(event) {
+            event.preventDefault();
+            const id = document.getElementById('record-id').value;
+            const clientName = document.getElementById('client-name').value.trim();
+            const itemReason = document.getElementById('item-reason').value.trim();
+            const purchaseCost = parseFloat(document.getElementById('purchase-cost').value) || 0;
+            const sellingPrice = parseFloat(document.getElementById('selling-price').value) || 0;
+            const dueDate = document.getElementById('due-date').value;
+            const notes = document.getElementById('optional-notes').value.trim();
+
+            if (id) {
+                records = records.map(r => {
+                    if (r.id === id) {
+                        const paidAmount = getPaidAmount(r);
+                        const isFullyPaid = paidAmount >= sellingPrice;
+                        return {
+                            ...r,
+                            clientName,
+                            itemReason,
+                            purchaseCost,
+                            sellingPrice,
+                            dueDate,
+                            notes,
+                            status: isFullyPaid ? 'paid' : 'pending'
+                        };
+                    }
+                    return r;
+                });
+                showToast('Registro actualizado');
+            } else {
+                const newRecord = {
+                    id: 'cap_' + Date.now(),
+                    clientName,
+                    itemReason,
+                    purchaseCost,
+                    sellingPrice,
+                    dueDate,
+                    notes,
+                    status: 'pending',
+                    payments: [],
+                    createdAt: new Date().toISOString()
+                };
+                records.push(newRecord);
+                showToast('Registro guardado');
+            }
+
+            saveToLocalStorage();
+            renderApp();
+            closeRecordModal();
+        }
+
+        // --- GESTIÓN DE ABONOS ---
+        function openPaymentModal(id) {
+            const rec = records.find(r => r.id === id);
+            if (!rec) return;
+
+            const paidSoFar = getPaidAmount(rec);
+            const remaining = Math.max(0, rec.sellingPrice - paidSoFar);
+
+            document.getElementById('payment-record-id').value = rec.id;
+            document.getElementById('payment-client-sub').innerText = `${rec.clientName} - ${rec.itemReason}`;
+            document.getElementById('payment-total-amount').innerText = `$${rec.sellingPrice.toFixed(2)}`;
+            document.getElementById('payment-remaining-amount').innerText = `$${remaining.toFixed(2)}`;
+            document.getElementById('payment-amount').value = '';
+            document.getElementById('payment-amount').max = remaining;
+            document.getElementById('payment-note').value = '';
+
+            const modal = document.getElementById('payment-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closePaymentModal() {
+            const modal = document.getElementById('payment-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function handlePaymentSubmit(event) {
+            event.preventDefault();
+            const id = document.getElementById('payment-record-id').value;
+            const amount = parseFloat(document.getElementById('payment-amount').value) || 0;
+            const date = document.getElementById('payment-date').value;
+            const note = document.getElementById('payment-note').value.trim();
+
+            if (amount <= 0) return;
+
+            records = records.map(r => {
+                if (r.id === id) {
+                    const payments = r.payments || [];
+                    const updatedPayments = [...payments, {
+                        id: 'pay_' + Date.now(),
+                        amount,
+                        date,
+                        note
+                    }];
+
+                    const totalPaid = updatedPayments.reduce((sum, p) => sum + p.amount, 0);
+                    const isCompleted = totalPaid >= r.sellingPrice;
+
+                    return {
+                        ...r,
+                        payments: updatedPayments,
+                        status: isCompleted ? 'paid' : 'pending'
+                    };
+                }
+                return r;
+            });
+
+            saveToLocalStorage();
+            renderApp();
+            closePaymentModal();
+            showToast('Abono registrado con éxito');
+        }
+
+        function getPaidAmount(record) {
+            if (!record.payments) return record.status === 'paid' ? record.sellingPrice : 0;
+            return record.payments.reduce((sum, p) => sum + p.amount, 0);
+        }
+
+        // --- HISTORIAL DE ABONOS ---
+        function openHistoryModal(id) {
+            const rec = records.find(r => r.id === id);
+            if (!rec) return;
+
+            document.getElementById('history-client-name').innerText = `${rec.clientName} (${rec.itemReason})`;
+            const container = document.getElementById('history-list-container');
+
+            const payments = rec.payments || [];
+            if (payments.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-6 text-slate-500 text-xs">
+                        No hay abonos registrados para este cliente.
+                    </div>
+                `;
+            } else {
+                container.innerHTML = payments.map((p, idx) => {
+                    const dateParts = p.date.split('-');
+                    const formattedDate = dateParts.length === 3 ? `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}` : p.date;
+                    return `
+                        <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs font-bold text-emerald-400">+$${p.amount.toFixed(2)}</span>
+                                    <span class="text-[10px] text-slate-500">${formattedDate}</span>
+                                </div>
+                                ${p.note ? `<p class="text-[11px] text-slate-400 mt-0.5">${p.note}</p>` : ''}
+                            </div>
+                            <button onclick="deletePayment('${rec.id}', '${p.id}')" class="text-slate-500 hover:text-rose-400 text-xs p-1 transition-colors" title="Eliminar Abono">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            const modal = document.getElementById('history-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeHistoryModal() {
+            const modal = document.getElementById('history-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function deletePayment(recordId, paymentId) {
+            records = records.map(r => {
+                if (r.id === recordId) {
+                    const updatedPayments = (r.payments || []).filter(p => p.id !== paymentId);
+                    const totalPaid = updatedPayments.reduce((sum, p) => sum + p.amount, 0);
+                    return {
+                        ...r,
+                        payments: updatedPayments,
+                        status: totalPaid >= r.sellingPrice ? 'paid' : 'pending'
+                    };
+                }
+                return r;
+            });
+
+            saveToLocalStorage();
+            renderApp();
+            openHistoryModal(recordId);
+            showToast('Abono eliminado');
+        }
+
+        function toggleStatus(id) {
+            records = records.map(r => {
+                if (r.id === id) {
+                    const isPending = r.status === 'pending';
+                    return { 
+                        ...r, 
+                        status: isPending ? 'paid' : 'pending'
+                    };
+                }
+                return r;
+            });
+            saveToLocalStorage();
+            renderApp();
+            showToast('Estado actualizado');
+        }
+
+        function deleteRecord(id) {
+            records = records.filter(r => r.id !== id);
+            saveToLocalStorage();
+            renderApp();
+            showToast('Registro eliminado');
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            ['all', 'pending', 'paid'].forEach(f => {
+                const btn = document.getElementById(`filter-btn-${f}`);
+                if (f === filter) {
+                    btn.className = 'flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-medium bg-emerald-500 text-slate-950 transition-all';
+                } else {
+                    btn.className = 'flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-medium bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 transition-all';
+                }
+            });
+            renderRecordsList();
+        }
+
+        function filterRecords() {
+            currentSearchQuery = document.getElementById('search-input').value.toLowerCase();
+            renderRecordsList();
+        }
+
+        function renderApp() {
+            updateDashboard();
+            renderRecordsList();
+        }
+
+        function updateDashboard() {
+            let totalInvestment = 0;
+            let totalReceivable = 0;
+            let realProfit = 0;
+            let projectedProfit = 0;
+
+            records.forEach(r => {
+                const fullProfit = r.sellingPrice - r.purchaseCost;
+                totalInvestment += r.purchaseCost;
+                projectedProfit += fullProfit;
+
+                const paidSoFar = getPaidAmount(r);
+                const remaining = Math.max(0, r.sellingPrice - paidSoFar);
+
+                totalReceivable += remaining;
+
+                // Ganancia acumulada/cobrada real (una vez superado el costo de inversión)
+                if (paidSoFar > r.purchaseCost) {
+                    realProfit += (paidSoFar - r.purchaseCost);
+                }
+            });
+
+            document.getElementById('sum-investment').innerText = `$${totalInvestment.toFixed(2)}`;
+            document.getElementById('sum-receivable').innerText = `$${totalReceivable.toFixed(2)}`;
+            document.getElementById('sum-real-profit').innerText = `$${realProfit.toFixed(2)}`;
+            document.getElementById('sum-projected-profit').innerText = `$${projectedProfit.toFixed(2)}`;
+        }
+
+        function renderRecordsList() {
+            const container = document.getElementById('records-container');
+            const emptyState = document.getElementById('empty-state');
+            const countEl = document.getElementById('record-count');
+
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            let filtered = records.filter(r => {
+                const matchesFilter = currentFilter === 'all' || r.status === currentFilter;
+                const matchesSearch = r.clientName.toLowerCase().includes(currentSearchQuery) || 
+                                      r.itemReason.toLowerCase().includes(currentSearchQuery);
+                return matchesFilter && matchesSearch;
+            });
+
+            filtered.sort((a, b) => {
+                if (a.status !== b.status) {
+                    return a.status === 'pending' ? -1 : 1;
+                }
+                return new Date(a.dueDate) - new Date(b.dueDate);
+            });
+
+            countEl.innerText = `${filtered.length} ${filtered.length === 1 ? 'registro' : 'registros'}`;
+
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            container.innerHTML = filtered.map(r => {
+                const totalProfit = r.sellingPrice - r.purchaseCost;
+                const paidSoFar = getPaidAmount(r);
+                const remaining = Math.max(0, r.sellingPrice - paidSoFar);
+                const isPaid = r.status === 'paid' || remaining <= 0;
+                const isOverdue = !isPaid && r.dueDate < todayStr;
+                const paymentsCount = (r.payments || []).length;
+                
+                const dateParts = r.dueDate.split('-');
+                const formattedDate = dateParts.length === 3 ? `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}` : r.dueDate;
+
+                let statusBadge = '';
+                if (isPaid) {
+                    statusBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Pagado</span>`;
+                } else if (isOverdue) {
+                    statusBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">Vencido</span>`;
+                } else {
+                    statusBadge = `<span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">Pendiente</span>`;
+                }
+
+                return `
+                    <div class="bg-slate-900 border ${isPaid ? 'border-slate-800/60 opacity-85' : isOverdue ? 'border-rose-500/30 bg-rose-950/5' : 'border-slate-800'} rounded-2xl p-4 transition-all">
+                        <div class="flex items-start justify-between gap-2 mb-3">
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <h4 class="font-bold text-slate-100 text-sm">${r.clientName}</h4>
+                                    ${statusBadge}
+                                </div>
+                                <p class="text-xs text-slate-400 mt-0.5"><i class="fa-solid fa-tag text-[10px] mr-1 text-slate-500"></i>${r.itemReason}</p>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <button onclick="openRecordModal('${r.id}')" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-200 transition-colors" title="Editar">
+                                    <i class="fa-solid fa-pen text-xs"></i>
+                                </button>
+                                <button onclick="deleteRecord('${r.id}')" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-rose-500/20 flex items-center justify-center text-slate-400 hover:text-rose-400 transition-colors" title="Eliminar">
+                                    <i class="fa-solid fa-trash text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Detalle de Montos e Inversión -->
+                        <div class="grid grid-cols-4 gap-1.5 bg-slate-950/70 border border-slate-800/80 rounded-xl p-2.5 mb-3 text-center">
+                            <div>
+                                <span class="text-[9px] text-slate-500 block">Inversión</span>
+                                <span class="text-xs font-semibold text-slate-300">$${r.purchaseCost.toFixed(2)}</span>
+                            </div>
+                            <div>
+                                <span class="text-[9px] text-slate-500 block">Total</span>
+                                <span class="text-xs font-bold text-slate-100">$${r.sellingPrice.toFixed(2)}</span>
+                            </div>
+                            <div>
+                                <span class="text-[9px] text-slate-500 block">Abonado</span>
+                                <span class="text-xs font-bold text-emerald-400">$${paidSoFar.toFixed(2)}</span>
+                            </div>
+                            <div>
+                                <span class="text-[9px] text-slate-500 block">Restante</span>
+                                <span class="text-xs font-bold ${remaining > 0 ? 'text-amber-400' : 'text-slate-400'}">$${remaining.toFixed(2)}</span>
+                            </div>
+                        </div>
+
+                        ${r.notes ? `
+                            <div class="text-[11px] text-slate-400 bg-slate-950/30 px-3 py-1.5 rounded-lg border border-slate-800/50 mb-3">
+                                <i class="fa-regular fa-note-sticky text-[10px] mr-1 text-slate-500"></i>${r.notes}
+                            </div>
+                        ` : ''}
+
+                        <!-- Controles de Abono y Estado -->
+                        <div class="flex items-center justify-between pt-1 border-t border-slate-800/60">
+                            <div class="flex items-center space-x-2">
+                                ${!isPaid ? `
+                                    <button onclick="openPaymentModal('${r.id}')" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold rounded-xl text-xs flex items-center space-x-1.5 transition-all shadow-sm">
+                                        <i class="fa-solid fa-hand-holding-dollar text-xs"></i>
+                                        <span>Abonar</span>
+                                    </button>
+                                ` : ''}
+                                
+                                <button onclick="openHistoryModal('${r.id}')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs flex items-center space-x-1 transition-all" title="Ver Historial">
+                                    <i class="fa-solid fa-list-check text-[10px] text-slate-400"></i>
+                                    <span>Abonos (${paymentsCount})</span>
+                                </button>
+                            </div>
+
+                            <button onclick="toggleStatus('${r.id}')" class="text-xs text-slate-400 hover:text-slate-200 transition-colors">
+                                ${isPaid ? '<i class="fa-solid fa-rotate-left mr-1"></i>Pendiente' : '<i class="fa-solid fa-check mr-1 text-emerald-400"></i>Pagado Total'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const messageEl = document.getElementById('toast-message');
+
+            messageEl.innerText = message;
+            toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
